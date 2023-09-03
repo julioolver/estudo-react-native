@@ -10,7 +10,7 @@ import {Mega} from "./components/mega/Mega";
 const App = () => {
     const app =
     <SafeAreaView style={style.App}>
-        <Mega qtdNumeros={60}/>
+        <Mega maxNumbers={60}/>
         {/* <MinMax min="3" max="20"></MinMax>
         <Alatorio min={2} max={60}></Alatorio> */}
        {/* <Comp />

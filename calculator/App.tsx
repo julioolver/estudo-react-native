@@ -5,113 +5,135 @@
  * @format
  */
 
-import React from 'react';
+import React, {useState} from 'react';
 import type {PropsWithChildren} from 'react';
+
 import {
   SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
-  Text,
-  useColorScheme,
   View,
+  useColorScheme,
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+import {Button} from './src/components/Button';
+import {Display} from './src/components/Display';
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+type operations = '+' | '-' | '*' | '/' | '=' | null;
+type valuesOfOperation = [number, number];
+const initialState = {
+  displayValue: '0',
+  clearDisplay: false,
+  currentOperation: null as operations,
+  valuesOperation: [0, 0] as valuesOfOperation,
+  current: 0,
+};
 
 function App(): JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const state = {...initialState};
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const [displayValue, setDisplayValue] = useState<string>(state.displayValue);
+  const [clearDisplay, setClearDisplay] = useState<boolean>(state.clearDisplay);
+  const [currentOperation, setOperationState] = useState<operations>(
+    state.currentOperation,
+  );
+  const [valuesOperation, setValuesOperation] = useState<number[]>(
+    state.valuesOperation,
+  );
+  const [current, setcurrent] = useState<number>(state.current);
+
+  const resetToInitialState = (): void => {
+    setDisplayValue(state.displayValue);
+    setClearDisplay(state.clearDisplay);
+    setOperationState(state.currentOperation);
+    setValuesOperation(state.valuesOperation);
+    setcurrent(state.current);
+  };
+
+  const addDigit = (n: string): void => {
+    if (n === '.' && displayValue.includes('.')) {
+      return;
+    }
+
+    const clearDisplayCalc = displayValue === '0' || clearDisplay;
+
+    const currentValue = clearDisplayCalc ? '' : displayValue;
+    const displayValueActualy = currentValue + n;
+
+    setDisplayValue(displayValueActualy);
+    setClearDisplay(false);
+
+    if (n !== '.') {
+      const newValue = parseFloat(displayValue);
+      const values = [...valuesOperation];
+      values[current] = newValue;
+
+      setValuesOperation(values);
+    }
+  };
+
+  const clearMemory = (): void => {
+    resetToInitialState();
+  };
+
+  const setOperation = (operation: operations) => {
+    if (current === 0) {
+      setOperationState(operation);
+      setcurrent(1);
+      setClearDisplay(true);
+
+      return;
+    }
+
+    const equals = operation === '=';
+    const values = [...valuesOperation];
+
+    try {
+      values[0] = eval(`${values[0]} ${currentOperation} ${values[1]}`);
+      setcurrent(0);
+    } catch (error) {
+      values[0] = valuesOperation[0]
+    }
+    values[1] = 0
+
+    setDisplayValue(`${values[0]}`)
+
+    setOperation(equals ? null : operation)
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+    <SafeAreaView style={styles.container}>
+      <Display value={displayValue} />
+      <View style={styles.buttons}>
+        <Button label="AC" triple onClick={clearMemory} />
+        <Button label="/" operation onClick={setOperation} />
+        <Button label="7" onClick={addDigit} />
+        <Button label="8" onClick={addDigit} />
+        <Button label="9" onClick={addDigit} />
+        <Button label="*" operation onClick={setOperation} />
+        <Button label="4" onClick={addDigit} />
+        <Button label="5" onClick={addDigit} />
+        <Button label="6" onClick={addDigit} />
+        <Button label="-" operation onClick={setOperation} />
+        <Button label="1" onClick={addDigit} />
+        <Button label="2" onClick={addDigit} />
+        <Button label="3" onClick={addDigit} />
+        <Button label="+" operation onClick={setOperation} />
+        <Button label="0" double onClick={addDigit} />
+        <Button label="." onClick={addDigit} />
+        <Button label="=" operation onClick={setOperation} />
+      </View>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  buttons: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
+  container: {
+    flex: 1,
   },
 });
 
